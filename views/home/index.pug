@@ -1,0 +1,61 @@
+// views/home/index.pug
+include ../head.pug
+body
+  .container.mt-5
+    .row.d-flex.align-items-center
+      .col-md-6
+        h1 Recipe List
+      .col-md-6.text-end
+        a.btn.btn-success(href='/add', role='button') Add Recipe
+    table.table.table-responsive.table-hover.table-striped.table-dark
+      thead
+        tr
+          th(scope="col") ID
+          th(scope="col") Recipe Name
+          th(scope="col") Prep Time
+          th(scope="col") Cook Time
+          th(scope="col") Ingredients
+          th(scope="col") Actions
+      tbody
+script.
+  document.addEventListener('DOMContentLoaded', function() {
+    axios.get('/api/recipe')
+      .then(function(response) {
+        const recipes = response.data;
+        const tableBody = document.querySelector('table tbody');
+        recipes.forEach(r => {
+          const row = document.createElement('tr');
+          const recipe = r.recipe;
+          row.innerHTML = `
+            <td>${r.id}</td>
+            <td>${recipe.recipeName}</td>
+            <td>${recipe.prepTime}</td>
+            <td>${recipe.cookTime}</td>
+            <td>${recipe.ingredients.join(', ')}</td>
+            <td>
+              <button class="btn btn-primary btn-sm" data-id="${r.id}" onclick="window.location.href='/update/${r.id}'">Update</button>
+              <button class="btn btn-danger btn-sm" data-id="${r.id}">Delete</button>
+            </td>
+          `;
+          tableBody.appendChild(row);
+        });
+      })
+      .catch(function(error) {
+        console.log(error);
+      });
+
+    // Event delegation for delete buttons
+    document.addEventListener('click', function(event) {
+      if (event.target && event.target.classList.contains('btn-danger')) {
+        const recipeId = event.target.getAttribute('data-id');
+        axios.delete(`/api/recipe/${recipeId}`)
+          .then(function(response) {
+            alert('Deleted successfully');
+            location.href = '/';
+          })
+          .catch(function(error) {
+            console.log('Error deleting recipe', error);
+          });
+      }
+    });
+  });

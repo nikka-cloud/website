@@ -1,0 +1,59 @@
+include ../head.pug
+body
+  .container.mt-5
+    h1 #{mode} Recipe
+    .mb-3
+      label(for="recipeName" class="form-label") Recipe Name
+      input(type="text" class="form-control" id="recipeName" name="recipeName" required)
+    .mb-3
+      label(for="prepTime" class="form-label") Preparation Time
+      input(type="text" class="form-control" id="prepTime" name="prepTime" placeholder="e.g., 15 mins" required)
+    .mb-3
+      label(for="cookTime" class="form-label") Cooking Time
+      input(type="text" class="form-control" id="cookTime" name="cookTime" placeholder="e.g., 30 mins" required)
+    .mb-3
+      label(for="ingredients" class="form-label") Ingredients (comma-separated)
+      input(type="text" class="form-control" id="ingredients" name="ingredients" required)
+    .mb-3
+      label(for="instructions" class="form-label") Instructions
+      textarea(class="form-control" id="instructions" name="instructions" rows="5" required)
+    button(type="button" class="btn btn-success" onclick="submitForm()") #{mode === 'Update' ? 'Update' : 'Add'}
+    span &nbsp;
+    button(type="button" class="btn btn-primary" onclick="window.location.href='/'") Back to list
+
+  script.
+    // Retrieve any existing data passed from the controller (for update mode)
+    let existingData = #{JSON.stringify(recipeData || null)};
+    if ("#{mode}" === "Update" && existingData) {
+      const rData = existingData.recipe;
+      document.getElementById('recipeName').value = rData.recipeName || '';
+      document.getElementById('prepTime').value = rData.prepTime || '';
+      document.getElementById('cookTime').value = rData.cookTime || '';
+      document.getElementById('ingredients').value = Array.isArray(rData.ingredients) ? rData.ingredients.join(', ') : rData.ingredients;
+      document.getElementById('instructions').value = rData.instructions || '';
+    }
+
+    function submitForm() {
+      const formData = {
+        recipeName: document.getElementById('recipeName').value,
+        prepTime: document.getElementById('prepTime').value,
+        cookTime: document.getElementById('cookTime').value,
+        ingredients: document.getElementById('ingredients').value,
+        instructions: document.getElementById('instructions').value
+      };
+      const url = "#{mode}" === "Update" && existingData ? `/api/recipe/${existingData.id}` : '/api/recipe';
+      const method = "#{mode}" === "Update" ? 'put' : 'post';
+
+      axios[method](url, formData)
+        .then(response => {
+          alert('Success!');
+          location.href = '/';
+        })
+        .catch(error => {
+          if (error.response) {
+            alert(JSON.stringify(error.response.data.errors));
+          } else {
+            alert(error);
+          }
+        });
+    }
